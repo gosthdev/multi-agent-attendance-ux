@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { ClassroomsView } from "@/components/classrooms-view";
+import { AdministrationView } from "@/components/administration-view";
 
 interface DashboardShellProps {
   user: {
@@ -261,10 +263,17 @@ export function DashboardShell({ user }: DashboardShellProps) {
               </p>
             </div>
 
-            {/* Content box (White Card with border-border) */}
-            <div className="bg-card border border-border rounded-2xl p-8 min-h-[300px] flex items-center justify-center text-muted-foreground border-dashed">
-              Módulo de {activeModule.label.toLowerCase()} en desarrollo
-            </div>
+            {/* Render actual views based on activeTab */}
+            {activeTab === "aulas" ? (
+              <ClassroomsView />
+            ) : activeTab === "administracion" ? (
+              <AdministrationView user={user} />
+            ) : (
+              /* Content box fallback (White Card with border-border) */
+              <div className="bg-card border border-border rounded-2xl p-8 min-h-[300px] flex items-center justify-center text-muted-foreground border-dashed">
+                Módulo de {activeModule.label.toLowerCase()} en desarrollo
+              </div>
+            )}
           </div>
         </main>
       </div>
