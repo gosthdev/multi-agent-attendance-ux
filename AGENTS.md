@@ -31,8 +31,9 @@ Access to modules is strictly filtered based on the user's Cognito groups. If a 
 | `cursos` | Cursos | `admin`, `teacher` |
 | `estudiantes` | Estudiantes | `admin`, `teacher`, `parent` |
 | `asistencia` | Asistencia | `admin`, `teacher` |
-| `justificacion` | Justificación | `parent` |
+| `justificaciones` | Justificaciones | `admin`, `teacher`, `parent` |
+| `justificar` | Justificar | `parent` |
 
 ## Default Starting Views
 - If the user has only the `teacher` group (and not `admin`), the dashboard default active tab is **`asistencia`**.
-- In other cases, it defaults to the first available module in the filtered visible menu list (e.g. `administracion` for admin, `estudiantes` or `justificacion` for parent).
+- In other cases, it defaults to the first available module in the filtered visible menu list (e.g. `administracion` for admin, `estudiantes` or `justificaciones` for parent).
