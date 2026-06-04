@@ -179,6 +179,25 @@ export function JustifyChatView() {
     }
   };
 
+  const resetSession = () => {
+    setSessionId(createSessionId());
+    setMessages([
+      {
+        id: "welcome",
+        role: "assistant",
+        content: "Sesion reiniciada. Continua con el motivo de la inasistencia.",
+        createdAt: new Date().toISOString()
+      }
+    ]);
+    setInput("");
+    setError(null);
+  };
+
+  const handleAttach = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files || event.target.files.length === 0) return;
+    event.target.value = "";
+  };
+
   return (
     <Card className="bg-white border-slate-200 shadow-sm rounded-2xl overflow-hidden font-sans">
       <CardHeader className="flex flex-col gap-3 border-b border-slate-100">
@@ -192,7 +211,14 @@ export function JustifyChatView() {
               Envia el motivo de la falta. Los adjuntos se agregaran en una siguiente version.
             </CardDescription>
           </div>
-          {/* Botón de reinicio irá aquí */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={resetSession}
+            className="h-8 gap-1.5 px-3 border-slate-200 text-slate-700 hover:bg-slate-50 text-xs cursor-pointer">
+            <RefreshCw className="h-3.5 w-3.5" />
+            Nueva sesion
+          </Button>
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs font-semibold text-slate-700">Estudiante</Label>
@@ -274,8 +300,26 @@ export function JustifyChatView() {
               disabled={isSending}
             />
             <div className="flex items-center justify-between px-3 pb-3">
-              {/* Botón de Adjuntos irá aquí */}
-              <div></div>
+              <div>
+                <label className="inline-flex items-center gap-2 cursor-pointer">
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*,.pdf"
+                  multiple
+                  onChange={handleAttach}
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full text-slate-400 hover:text-slate-900"
+                  type="button"
+                >
+                  <Paperclip className="h-5 w-5" />
+                  <span className="sr-only">Adjuntar archivo</span>
+                </Button>
+              </label>
+              </div>
               <Button
                 onClick={handleSend}
                 disabled={isSending || !input.trim()}
