@@ -24,6 +24,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ClassroomsView } from "@/components/classrooms-view";
 import { AdministrationView } from "@/components/administration-view";
+import { JustifyChatView } from "@/components/justify-chat-view";
+
 
 interface DashboardShellProps {
   user: {
@@ -268,6 +270,8 @@ export function DashboardShell({ user }: DashboardShellProps) {
               <ClassroomsView />
             ) : activeTab === "administracion" ? (
               <AdministrationView user={user} />
+            ) : activeTab === "justificar" ? (
+              <JustifyChatView />
             ) : (
               /* Content box fallback (White Card with border-border) */
               <div className="bg-card border border-border rounded-2xl p-8 min-h-[300px] flex items-center justify-center text-muted-foreground border-dashed">
