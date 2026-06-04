@@ -37,3 +37,9 @@ Access to modules is strictly filtered based on the user's Cognito groups. If a 
 ## Default Starting Views
 - If the user has only the `teacher` group (and not `admin`), the dashboard default active tab is **`asistencia`**.
 - In other cases, it defaults to the first available module in the filtered visible menu list (e.g. `administracion` for admin, `estudiantes` or `justificaciones` for parent).
+
+## API Proxy & CORS Bypass
+- **Internal Reverse Proxy**: To bypass browser CORS preflight `OPTIONS` requests (which return a 404 on the backend), all client-side calls MUST be made to relative paths on the Next.js server.
+- **Dynamic Path Prefix**: The API version path (e.g. `/api/v1`) is dynamically resolved by the helper `getApiPrefix()` from [lib/utils.ts](file:///home/eddu/dev/multi-agent-attendance-ux/lib/utils.ts) to avoid hardcoding the API version in codebase.
+- **Reverse Proxy Routing**: [proxy.ts](file:///home/eddu/dev/multi-agent-attendance-ux/proxy.ts) intercepts these requests and rewrites them server-side to the destination configured in `NEXT_PUBLIC_API_URL` (e.g. `http://localhost:5000/api/v1`).
+
