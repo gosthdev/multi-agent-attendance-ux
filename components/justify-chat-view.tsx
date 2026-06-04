@@ -88,10 +88,82 @@ export function JustifyChatView() {
 
   const apiPrefix = useMemo(() => getApiPrefix(), []);
 
+  useEffect(() => {
+    const fetchStudents = async () => {
+      setStudentsLoading(true);
+      setStudentsError(null);
+      try {
+        const token = requireToken();
+        const response = await fetch(`${apiPrefix}/students/own`, {
+          method: "GET",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        });
+
+        if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText || "Error del servidor"}`);
+
+        const data = await response.json();
+        if (!Array.isArray(data)) throw new Error("Formato invalido en estudiantes.");
+
+        setStudents(data);
+        if (data.length > 0) setSelectedStudentId(data[0].id || "");
+      } catch (err: any) {
+        console.error("Students fetch error:", err);
+        setStudentsError(err?.message || "Error al cargar estudiantes.");
+        setStudents([]);
+      } finally {
+        setStudentsLoading(false);
+      }
+    };
+
+    fetchStudents();
+  }, [apiPrefix]);
+
   return (
     <Card className="bg-white border-slate-200 shadow-sm rounded-2xl overflow-hidden font-sans">
       <CardHeader className="flex flex-col gap-3 border-b border-slate-100">
-        {/* Header content will go here */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-1">
+            <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <Bot className="h-5 w-5 text-primary" />
+              Agente de Justificacion
+            </CardTitle>
+            <CardDescription className="text-xs text-slate-500">
+              Envia el motivo de la falta. Los adjuntos se agregaran en una siguiente version.
+            </CardDescription>
+          </div>
+          {/* Botón de reinicio irá aquí */}
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs font-semibold text-slate-700">Estudiante</Label>
+          <Select
+            value={selectedStudentId}
+            onValueChange={setSelectedStudentId}
+            disabled={studentsLoading || students.length === 0}
+          >
+            <SelectTrigger className="h-9 border-slate-200 text-slate-950 focus:ring-primary/10 rounded-lg">
+              <SelectValue placeholder={studentsLoading ? "Cargando estudiantes..." : "Selecciona un estudiante"} />
+            </SelectTrigger>
+            <SelectContent>
+              {students.map((student) => (
+                <SelectItem key={student.id} value={student.id}>
+                  <div className="flex items-center gap-2">
+                    <Users className="h-3.5 w-3.5 text-slate-400" />
+                    <span>{formatStudentLabel(student)}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {studentsError && (
+            <div className="flex items-center gap-2 text-xs text-red-600">
+              <AlertCircle className="h-3.5 w-3.5" />
+              <span>{studentsError}</span>
+            </div>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="p-0">
         {/* Chat and Input will go here */}
