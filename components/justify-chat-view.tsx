@@ -125,6 +125,60 @@ export function JustifyChatView() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isSending]);
 
+  const handleSend = async () => {
+    if (!input.trim()) return;
+    if (!selectedStudentId) {
+      setError("Selecciona un estudiante antes de enviar.");
+      return;
+    }
+
+    const userMessage: ChatMessage = {
+      id: `user-${Date.now()}`,
+      role: "user",
+      content: input.trim(),
+      createdAt: new Date().toISOString()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInput("");
+    setError(null);
+    setIsSending(true);
+
+    try {
+      const token = requireToken();
+      const response = await fetch(`${apiPrefix}/astendance/justify/chat`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          sessionId,
+          studentId: selectedStudentId,
+          content: userMessage.content,
+          attachments: []
+        })
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText || "Error del servidor"}`);
+
+      const data = await response.json();
+      const assistantMessage: ChatMessage = {
+        id: `assistant-${Date.now()}`,
+        role: "assistant",
+        content: extractResponseMessage(data),
+        createdAt: new Date().toISOString()
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (err: any) {
+      console.error("Chat error:", err);
+      setError(err?.message || "Error al enviar el mensaje al agente.");
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   return (
     <Card className="bg-white border-slate-200 shadow-sm rounded-2xl overflow-hidden font-sans">
       <CardHeader className="flex flex-col gap-3 border-b border-slate-100">
@@ -210,7 +264,30 @@ export function JustifyChatView() {
             </div>
           </ScrollArea>
         </div>
-        {/* El Input irá aquí */}
+        <div className="border-t border-slate-100 p-6">
+          <div className="relative flex flex-col w-full rounded-3xl border border-slate-200 bg-white shadow-sm focus-within:ring-1 focus-within:ring-primary/30">
+            <Textarea
+              placeholder="Pregunta cualquier cosa..."
+              value={input}
+              onChange={(event) => setInput(event.target.value)}
+              className="min-h-[56px] w-full resize-none border-0 bg-transparent px-5 py-3 text-base text-slate-950 placeholder:text-slate-400 shadow-none focus-visible:ring-0"
+              disabled={isSending}
+            />
+            <div className="flex items-center justify-between px-3 pb-3">
+              {/* Botón de Adjuntos irá aquí */}
+              <div></div>
+              <Button
+                onClick={handleSend}
+                disabled={isSending || !input.trim()}
+                size="icon"
+                className="h-10 w-10 rounded-full bg-slate-900 text-white hover:bg-slate-900/80"
+              >
+                <ArrowUp className="h-5 w-5" />
+                <span className="sr-only">Enviar mensaje</span>
+              </Button>
+            </div>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
