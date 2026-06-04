@@ -24,7 +24,6 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ClassroomsView } from "@/components/classrooms-view";
 import { AdministrationView } from "@/components/administration-view";
-import { ClassroomsView } from "@/components/classrooms-view";
 
 interface DashboardShellProps {
   user: {
