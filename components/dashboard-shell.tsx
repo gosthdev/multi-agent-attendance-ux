@@ -17,7 +17,8 @@ import {
   Bell, 
   Search, 
   Calendar,
-  Sparkles
+  Sparkles,
+  Bot
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -46,7 +47,8 @@ export function DashboardShell({ user }: DashboardShellProps) {
     cursos: ["admin", "teacher"],
     estudiantes: ["admin", "teacher", "parent"],
     asistencia: ["admin", "teacher"],
-    justificacion: ["parent"]
+    justificaciones: ["admin", "teacher", "parent"],
+    justificar: ["parent"]
   };
 
   const displayName = user?.name || user?.given_name ? `${user?.given_name || ""} ${user?.family_name || ""}`.trim() : (user?.email?.split("@")[0] || "Usuario");
@@ -70,7 +72,8 @@ export function DashboardShell({ user }: DashboardShellProps) {
     { id: "cursos", label: "Cursos", icon: BookOpen },
     { id: "estudiantes", label: "Estudiantes", icon: User },
     { id: "asistencia", label: "Asistencia", icon: CalendarCheck },
-    { id: "justificacion", label: "Justificación", icon: ClipboardList },
+    { id: "justificaciones", label: "Justificaciones", icon: ClipboardList },
+    { id: "justificar", label: "Justificar", icon: Bot },
   ];
 
   // Decode Cognito groups and filter visible items
