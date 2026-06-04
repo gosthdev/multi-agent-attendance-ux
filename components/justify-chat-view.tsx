@@ -146,7 +146,7 @@ export function JustifyChatView() {
 
     try {
       const token = requireToken();
-      const response = await fetch(`${apiPrefix}/astendance/justify/chat`, {
+      const response = await fetch(`${apiPrefix}/attendance/justify/chat`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
