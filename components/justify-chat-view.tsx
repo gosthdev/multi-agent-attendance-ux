@@ -68,5 +68,34 @@ const formatStudentLabel = (student: Student) => {
 };
 
 export function JustifyChatView() {
-  return null;
+  const [sessionId, setSessionId] = useState(() => createSessionId());
+  const [selectedStudentId, setSelectedStudentId] = useState<string>("");
+  const [students, setStudents] = useState<Student[]>([]);
+  const [studentsLoading, setStudentsLoading] = useState(true);
+  const [studentsError, setStudentsError] = useState<string | null>(null);
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: "welcome",
+      role: "assistant",
+      content: "Hola, soy el agente de justificacion. Indica el motivo de la inasistencia.",
+      createdAt: new Date().toISOString()
+    }
+  ]);
+  const [isSending, setIsSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+
+  const apiPrefix = useMemo(() => getApiPrefix(), []);
+
+  return (
+    <Card className="bg-white border-slate-200 shadow-sm rounded-2xl overflow-hidden font-sans">
+      <CardHeader className="flex flex-col gap-3 border-b border-slate-100">
+        {/* Header content will go here */}
+      </CardHeader>
+      <CardContent className="p-0">
+        {/* Chat and Input will go here */}
+      </CardContent>
+    </Card>
+  );
 }
