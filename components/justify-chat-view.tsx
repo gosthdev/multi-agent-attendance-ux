@@ -121,6 +121,10 @@ export function JustifyChatView() {
     fetchStudents();
   }, [apiPrefix]);
 
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isSending]);
+
   return (
     <Card className="bg-white border-slate-200 shadow-sm rounded-2xl overflow-hidden font-sans">
       <CardHeader className="flex flex-col gap-3 border-b border-slate-100">
@@ -166,7 +170,47 @@ export function JustifyChatView() {
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        {/* Chat and Input will go here */}
+        <div className="border-b border-slate-100">
+          <ScrollArea className="h-[420px] px-6 py-6">
+            <div className="space-y-4">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={`max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
+                      message.role === "user"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-slate-100 text-slate-700"
+                    }`}
+                  >
+                    <p>{message.content}</p>
+                    <span
+                      className={`mt-2 block text-[10px] ${
+                        message.role === "user" ? "text-primary-foreground/70" : "text-slate-400"
+                      }`}
+                    >
+                      {new Date(message.createdAt).toLocaleTimeString("es-ES", {
+                        hour: "2-digit",
+                        minute: "2-digit"
+                      })}
+                    </span>
+                  </div>
+                </div>
+              ))}
+              {isSending && (
+                <div className="flex justify-start">
+                  <div className="max-w-[70%] rounded-2xl px-4 py-3 text-sm bg-slate-100 text-slate-500">
+                    Escribiendo...
+                  </div>
+                </div>
+              )}
+              <div ref={bottomRef} />
+            </div>
+          </ScrollArea>
+        </div>
+        {/* El Input irá aquí */}
       </CardContent>
     </Card>
   );
