@@ -1,0 +1,1243 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1/teachers": {
+      "get": {
+        "operationId": "TeachersController_getAll",
+        "parameters": [],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeacherEntity"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get all teachers",
+        "tags": ["Teachers"]
+      }
+    },
+    "/api/v1/teachers/{id}": {
+      "get": {
+        "operationId": "TeachersController_getById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeacherEntity"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get teacher by id ",
+        "tags": ["Teachers"]
+      }
+    },
+    "/api/v1/parents": {
+      "get": {
+        "operationId": "ParentController_getAll",
+        "parameters": [],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ParentEntity"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get all parents",
+        "tags": ["Parent"]
+      }
+    },
+    "/api/v1/parents/{id}": {
+      "get": {
+        "operationId": "ParentController_getById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParentEntity"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get parent by id",
+        "tags": ["Parent"]
+      }
+    },
+    "/api/v1/classroom": {
+      "get": {
+        "operationId": "ClassroomController_getAll",
+        "parameters": [],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClassroomEntity"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get all classrooms",
+        "tags": ["Classroom"]
+      }
+    },
+    "/api/v1/classroom/{id}": {
+      "get": {
+        "operationId": "ClassroomController_getById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClassroomEntity"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get classroom by id",
+        "tags": ["Classroom"]
+      }
+    },
+    "/api/v1/courses": {
+      "get": {
+        "operationId": "CoursesController_getAll",
+        "parameters": [],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CourseEntity"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get all courses",
+        "tags": ["Courses"]
+      }
+    },
+    "/api/v1/courses/{id}": {
+      "get": {
+        "operationId": "CoursesController_getById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseEntity"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get course by id",
+        "tags": ["Courses"]
+      }
+    },
+    "/api/v1/courses/code/{code}": {
+      "get": {
+        "operationId": "CoursesController_getByCode",
+        "parameters": [
+          {
+            "name": "code",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseEntity"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get course by code",
+        "tags": ["Courses"]
+      }
+    },
+    "/api/v1/students": {
+      "post": {
+        "operationId": "StudentsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStudentDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudentEntity"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create a new student",
+        "tags": ["Students"]
+      },
+      "get": {
+        "operationId": "StudentsController_getAll",
+        "parameters": [],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StudentEntity"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get all students",
+        "tags": ["Students"]
+      }
+    },
+    "/api/v1/students/own": {
+      "get": {
+        "operationId": "StudentsController_getOwn",
+        "parameters": [],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StudentEntity"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get own students",
+        "tags": ["Students"]
+      }
+    },
+    "/api/v1/students/{id}": {
+      "get": {
+        "operationId": "StudentsController_getById",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudentEntity"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get student by id",
+        "tags": ["Students"]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "description": "Authenticates a user via AWS Cognito and returns JWT tokens. Use the accessToken in the Authorize dialog (Bearer \u003CaccessToken\u003E) to call protected endpoints.",
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "summary": "Sign in",
+        "tags": ["Auth"]
+      }
+    },
+    "/api/v1/administration/teacher": {
+      "post": {
+        "description": "Creates a new teacher in AWS Cognito and the database. Role: admin only.",
+        "operationId": "AdministrationController_createTeacher",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTeacherDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a teacher",
+        "tags": ["Administration"]
+      }
+    },
+    "/api/v1/administration/parent": {
+      "post": {
+        "description": "Creates a new parent in AWS Cognito and the database. Role: teacher only.",
+        "operationId": "AdministrationController_createParent",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTeacherDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a parent",
+        "tags": ["Administration"]
+      }
+    },
+    "/api/v1/attendance/{id}/rekognition": {
+      "put": {
+        "description": "Uploads a student photo to AWS Rekognition for facial recognition. The face ID is stored on the student record for future attendance checks.",
+        "operationId": "AttendanceController_updateRekognition",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Student UUID",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["photo"],
+                "properties": {
+                  "photo": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Student face photo. Max 150 KB. Allowed formats: JPEG, JPG, PNG."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "summary": "Register student face for attendance",
+        "tags": ["Attendance"]
+      }
+    },
+    "/api/v1/attendance/schedule": {
+      "post": {
+        "description": "Searches the uploaded photo against registered faces in AWS Rekognition. Matches the recognized student to their current schedule and records attendance. Grace period: 0 minutes after schedule start time before marked as late.",
+        "operationId": "AttendanceController_registerAttendance",
+        "parameters": [
+          {
+            "name": "time",
+            "required": false,
+            "in": "query",
+            "description": "Simulated datetime (ISO string) for testing. If omitted, current server time is used.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["photo"],
+                "properties": {
+                  "photo": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Photo to search for face match. Max 50 KB. Allowed formats: JPEG, JPG, PNG."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "summary": "Register attendance via facial recognition",
+        "tags": ["Attendance"]
+      }
+    },
+    "/api/v1/attendance/justify/chat": {
+      "post": {
+        "description": "Sends a message to the justification agent and receives a response. Role: teacher only.",
+        "operationId": "JustifyController_chat",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatMessageDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Chat with Justification Agent",
+        "tags": ["Justify"]
+      }
+    },
+    "/api/v1/attendance/justify/presigned-urls": {
+      "post": {
+        "description": "Retrieves presigned URLs for file uploads. Role: teacher only.",
+        "operationId": "JustifyController_getPresignedUrls",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PresignedUrlsDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get presigned URLs",
+        "tags": ["Justify"]
+      }
+    }
+  },
+  "info": {
+    "title": "Multi Agent Attendance Justification API",
+    "description": "API documentation for the Multi Agent Attendance Justification application",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "CourseEntity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "teacherCourses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TeacherCourseEntity"
+            }
+          }
+        },
+        "required": ["id", "name", "code", "teacherCourses"]
+      },
+      "TeacherCourseEntity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "teacherId": {
+            "type": "string"
+          },
+          "courseId": {
+            "type": "string"
+          },
+          "teacher": {
+            "$ref": "#/components/schemas/TeacherEntity"
+          },
+          "course": {
+            "$ref": "#/components/schemas/CourseEntity"
+          }
+        },
+        "required": ["id", "teacherId", "courseId", "teacher", "course"]
+      },
+      "TeacherEntity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "documentNumber": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserEntity"
+          },
+          "teacherCourses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TeacherCourseEntity"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "documentNumber",
+          "phone",
+          "isActive",
+          "userId",
+          "user",
+          "teacherCourses"
+        ]
+      },
+      "ParentEntity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "documentNumber": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserEntity"
+          }
+        },
+        "required": ["id", "documentNumber", "phone", "userId", "user"]
+      },
+      "UserEntity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "isAdmin": {
+            "type": "boolean"
+          },
+          "teacher": {
+            "$ref": "#/components/schemas/TeacherEntity"
+          },
+          "parent": {
+            "$ref": "#/components/schemas/ParentEntity"
+          }
+        },
+        "required": [
+          "id",
+          "firstName",
+          "lastName",
+          "email",
+          "isAdmin",
+          "teacher",
+          "parent"
+        ]
+      },
+      "UpdateTeacherDTO": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "lastName": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "phone": {
+            "type": "string",
+            "pattern": "^9\\d{8}$"
+          }
+        }
+      },
+      "UpdateParentDTO": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "lastName": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "phone": {
+            "type": "string",
+            "pattern": "^9\\d{8}$"
+          }
+        }
+      },
+      "CreateClassroomDTO": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "capacity": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 64
+          },
+          "building": {
+            "type": "string"
+          },
+          "tutorId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": ["name", "capacity", "building"]
+      },
+      "ClassroomEntity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "capacity": {
+            "type": "number"
+          },
+          "building": {
+            "type": "string"
+          },
+          "tutorId": {
+            "type": "string",
+            "nullable": true
+          },
+          "tutor": {
+            "$ref": "#/components/schemas/TeacherEntity"
+          }
+        },
+        "required": ["id", "name", "capacity", "building", "tutorId", "tutor"]
+      },
+      "UpdateClassroomDTO": {
+        "type": "object",
+        "properties": {
+          "capacity": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 64
+          },
+          "building": {
+            "type": "string"
+          },
+          "tutorId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": ["capacity", "building"]
+      },
+      "CreateCourseDTO": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": ["name", "code"]
+      },
+      "UpdateCourseDTO": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        }
+      },
+      "CreateScheduleDTO": {
+        "type": "object",
+        "properties": {
+          "teacherId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "courseId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "classroomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dayOfWeek": {
+            "type": "number",
+            "enum": [1, 2, 3, 4, 5, 6, 7]
+          },
+          "startTime": {
+            "type": "string"
+          },
+          "endTime": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "teacherId",
+          "courseId",
+          "classroomId",
+          "dayOfWeek",
+          "startTime",
+          "endTime"
+        ]
+      },
+      "AcademicYearEntity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "year": {
+            "type": "number"
+          },
+          "startDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "endDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        },
+        "required": ["id", "year", "startDate", "endDate", "isActive"]
+      },
+      "ClassroomCourseTeacherEntity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "academicYearId": {
+            "type": "string"
+          },
+          "courseId": {
+            "type": "string"
+          },
+          "classroomId": {
+            "type": "string"
+          },
+          "teacherId": {
+            "type": "string"
+          },
+          "academicYear": {
+            "$ref": "#/components/schemas/AcademicYearEntity"
+          },
+          "course": {
+            "$ref": "#/components/schemas/CourseEntity"
+          },
+          "classroom": {
+            "$ref": "#/components/schemas/ClassroomEntity"
+          },
+          "teacher": {
+            "$ref": "#/components/schemas/TeacherEntity"
+          }
+        },
+        "required": [
+          "id",
+          "academicYearId",
+          "courseId",
+          "classroomId",
+          "teacherId",
+          "academicYear",
+          "course",
+          "classroom",
+          "teacher"
+        ]
+      },
+      "ScheduleEntity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "classroomCourseTeacherId": {
+            "type": "string"
+          },
+          "dayOfWeek": {
+            "type": "number",
+            "enum": [1, 2, 3, 4, 5, 6, 7]
+          },
+          "startTime": {
+            "type": "string"
+          },
+          "endTime": {
+            "type": "string"
+          },
+          "classroomCourseTeacher": {
+            "$ref": "#/components/schemas/ClassroomCourseTeacherEntity"
+          }
+        },
+        "required": [
+          "id",
+          "classroomCourseTeacherId",
+          "dayOfWeek",
+          "startTime",
+          "endTime",
+          "classroomCourseTeacher"
+        ]
+      },
+      "CreateEnrollmentDTO": {
+        "type": "object",
+        "properties": {
+          "studentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "classroomCourseTeacherId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": ["studentId", "classroomCourseTeacherId"]
+      },
+      "StudentEntity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "documentNumber": {
+            "type": "string"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "parentId": {
+            "type": "string",
+            "nullable": true
+          },
+          "baseClassroomId": {
+            "type": "string",
+            "nullable": true
+          },
+          "rekognitionId": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "parent": {
+            "$ref": "#/components/schemas/ParentEntity"
+          },
+          "baseClassroom": {
+            "$ref": "#/components/schemas/ClassroomEntity"
+          }
+        },
+        "required": [
+          "id",
+          "documentNumber",
+          "firstName",
+          "lastName",
+          "parentId",
+          "baseClassroomId",
+          "rekognitionId",
+          "isActive",
+          "parent",
+          "baseClassroom"
+        ]
+      },
+      "EnrollmentEntity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "studentId": {
+            "type": "string"
+          },
+          "classroomCourseTeacherId": {
+            "type": "string"
+          },
+          "student": {
+            "$ref": "#/components/schemas/StudentEntity"
+          },
+          "classroomCourseTeacher": {
+            "$ref": "#/components/schemas/ClassroomCourseTeacherEntity"
+          }
+        },
+        "required": [
+          "id",
+          "studentId",
+          "classroomCourseTeacherId",
+          "student",
+          "classroomCourseTeacher"
+        ]
+      },
+      "CreateStudentDTO": {
+        "type": "object",
+        "properties": {
+          "documentNumber": {
+            "type": "string",
+            "pattern": "^\\d{8}$"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "parentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "baseClassroomId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "rekognitionId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": ["documentNumber", "firstName", "lastName"]
+      },
+      "UpdateStudentParentDTO": {
+        "type": "object",
+        "properties": {
+          "parentId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": ["parentId"]
+      },
+      "UpdateStudentClassroomDTO": {
+        "type": "object",
+        "properties": {
+          "baseClassroomId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": ["baseClassroomId"]
+      },
+      "UpdateStudentActiveDTO": {
+        "type": "object",
+        "properties": {
+          "isActive": {
+            "type": "boolean"
+          }
+        },
+        "required": ["isActive"]
+      },
+      "LoginDTO": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": ["email", "password"]
+      },
+      "CreateUserDTO": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "lastName": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 64,
+            "format": "email"
+          }
+        },
+        "required": ["firstName", "lastName", "email"]
+      },
+      "CreateTeacherDTO": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/CreateUserDTO"
+          },
+          "documentNumber": {
+            "type": "string",
+            "pattern": "^\\d{8}$"
+          },
+          "phone": {
+            "type": "string",
+            "pattern": "^9\\d{8}$"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": ["user", "documentNumber", "phone", "password"]
+      },
+      "ChatMessageDTO": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "studentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "content": {
+            "type": "string"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["content"]
+      },
+      "FilePlanDTO": {
+        "type": "object",
+        "properties": {
+          "filename": {
+            "type": "string"
+          },
+          "contentType": {
+            "type": "string"
+          }
+        },
+        "required": ["filename", "contentType"]
+      },
+      "PresignedUrlsDTO": {
+        "type": "object",
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FilePlanDTO"
+            }
+          },
+          "studentId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": ["files"]
+      }
+    }
+  }
+}
