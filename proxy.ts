@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { getApiPrefix } from './lib/utils';
 
 function isTokenValid(token: string | undefined): boolean {
   if (!token) return false;
@@ -23,15 +24,24 @@ function isTokenValid(token: string | undefined): boolean {
 }
 
 export function proxy(request: NextRequest) {
+  const { pathname, search } = request.nextUrl;
+  const apiPrefix = getApiPrefix();
+
+  // Intercept and proxy API calls to the backend to bypass CORS (server-to-server rewrite)
+  if (pathname.startsWith(apiPrefix + '/')) {
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
+    const path = pathname.replace(apiPrefix + '/', '');
+    const targetUrl = new URL(`${backendUrl}/${path}${search}`);
+    return NextResponse.rewrite(targetUrl);
+  }
+
   const token = request.cookies.get('id_token')?.value;
   const isAuthenticated = isTokenValid(token);
-  const { pathname } = request.nextUrl;
 
   // Let public assets, next internals, and specific paths pass
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon.ico') ||
-    pathname.startsWith('/api/') ||
     pathname.match(/\.(png|jpg|jpeg|svg|gif|webp)$/)
   ) {
     return NextResponse.next();
@@ -55,5 +65,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 };
