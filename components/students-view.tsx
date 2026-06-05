@@ -40,6 +40,13 @@ import {
   TabsContent,
 } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getApiPrefix } from "@/lib/utils";
 
 interface Student {
@@ -285,6 +292,23 @@ interface CreateStudentForm {
   baseClassroomId: string;
 }
 
+interface Parent {
+  id: string;
+  documentNumber: string;
+  phone: string;
+  user: {
+    firstName: string;
+    lastName: string;
+  };
+}
+
+interface Classroom {
+  id: string;
+  name: string;
+  building: string;
+  capacity: number;
+}
+
 const initialForm: CreateStudentForm = {
   documentNumber: "",
   firstName: "",
@@ -300,10 +324,53 @@ function CreateStudentForm() {
     type: "success" | "error";
     message: string;
   } | null>(null);
+  const [parents, setParents] = useState<Parent[]>([]);
+  const [classrooms, setClassrooms] = useState<Classroom[]>([]);
+  const [loadingOptions, setLoadingOptions] = useState(false);
+
+  useEffect(() => {
+    const fetchOptions = async () => {
+      setLoadingOptions(true);
+      try {
+        const token = getCookie("id_token");
+        const apiUrl = getApiPrefix();
+
+        const [parentsRes, classroomsRes] = await Promise.all([
+          fetch(`${apiUrl}/parents`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${apiUrl}/classroom`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+
+        if (parentsRes.ok) {
+          setParents(await parentsRes.json());
+        }
+        if (classroomsRes.ok) {
+          setClassrooms(await classroomsRes.json());
+        }
+      } catch (err) {
+        console.error("Error loading options:", err);
+      } finally {
+        setLoadingOptions(false);
+      }
+    };
+
+    fetchOptions();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
     setForm((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleSelectChange = (field: "parentId" | "baseClassroomId", value: string) => {
+    // Select items cannot use empty string as value, so we use a sentinel
+    // string "__none" for the UI option and convert it to empty string
+    // for the payload stored in the form state.
+    const normalized = value === "__none" ? "" : value;
+    setForm((prev) => ({ ...prev, [field]: normalized }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -443,35 +510,45 @@ function CreateStudentForm() {
             </div>
           </div>
 
-          {/* Opcionales */}
+          {/* Opcionales - Selects de Apoderado y Aula */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="parentId" className="text-xs font-semibold text-slate-700">
-                ID Apoderado{" "}
+              <Label className="text-xs font-semibold text-slate-700">
+                Apoderado{" "}
                 <span className="font-normal text-slate-400">(opcional)</span>
               </Label>
-              <Input
-                id="parentId"
-                placeholder="UUID del apoderado"
-                value={form.parentId}
-                onChange={handleChange}
-                className="h-10 border-slate-200 text-slate-950 placeholder:text-slate-400 focus-visible:ring-primary/10 rounded-lg font-mono text-xs"
-                disabled={isPending}
-              />
+              <Select value={form.parentId} onValueChange={(value) => handleSelectChange("parentId", value)}>
+                <SelectTrigger className="w-full h-10 border-slate-200 text-slate-950 rounded-lg" disabled={isPending || loadingOptions}>
+                  <SelectValue placeholder={loadingOptions ? "Cargando..." : "Seleccionar apoderado"} />
+                </SelectTrigger>
+                <SelectContent position="popper" align="start" className="rounded-lg border-slate-200 bg-white min-w-[220px]">
+                  <SelectItem value="__none">Sin apoderado</SelectItem>
+                  {parents.map((parent) => (
+                    <SelectItem key={parent.id} value={parent.id}>
+                      {parent.user.firstName} {parent.user.lastName} ({parent.documentNumber})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="baseClassroomId" className="text-xs font-semibold text-slate-700">
-                ID Aula base{" "}
+              <Label className="text-xs font-semibold text-slate-700">
+                Aula Base{" "}
                 <span className="font-normal text-slate-400">(opcional)</span>
               </Label>
-              <Input
-                id="baseClassroomId"
-                placeholder="UUID del aula"
-                value={form.baseClassroomId}
-                onChange={handleChange}
-                className="h-10 border-slate-200 text-slate-950 placeholder:text-slate-400 focus-visible:ring-primary/10 rounded-lg font-mono text-xs"
-                disabled={isPending}
-              />
+              <Select value={form.baseClassroomId} onValueChange={(value) => handleSelectChange("baseClassroomId", value)}>
+                <SelectTrigger className="w-full h-10 border-slate-200 text-slate-950 rounded-lg" disabled={isPending || loadingOptions}>
+                  <SelectValue placeholder={loadingOptions ? "Cargando..." : "Seleccionar aula"} />
+                </SelectTrigger>
+                <SelectContent position="popper" align="start" className="rounded-lg border-slate-200 bg-white min-w-[220px]">
+                  <SelectItem value="__none">Sin aula asignada</SelectItem>
+                  {classrooms.map((classroom) => (
+                    <SelectItem key={classroom.id} value={classroom.id}>
+                      {classroom.name} - {classroom.building} ({classroom.capacity} alumnos)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
