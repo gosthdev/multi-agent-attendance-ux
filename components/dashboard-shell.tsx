@@ -19,18 +19,21 @@ import {
   Search, 
   Calendar,
   Sparkles,
-  Bot
+  Bot,
+  History
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ClassroomsView } from "@/components/classrooms-view";
 import { AdministrationView } from "@/components/administration-view";
 import { JustifyChatView } from "@/components/justify-chat-view";
+import { CoursesView } from "@/components/courses-view";
+import { StudentsView } from "@/components/students-view";
+import { AttendanceHistoryView } from "@/components/attendance-history-view";
 const AttendanceView = dynamic(
   () => import("@/components/attendance-view").then((m) => ({ default: m.AttendanceView })),
   { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl p-8 min-h-[300px] flex items-center justify-center text-muted-foreground text-sm">Cargando módulo de asistencia…</div> }
 );
-
 
 interface DashboardShellProps {
   user: {
@@ -57,7 +60,8 @@ export function DashboardShell({ user }: DashboardShellProps) {
     estudiantes: ["admin", "teacher", "parent"],
     asistencia: ["admin", "teacher"],
     justificaciones: ["admin", "teacher", "parent"],
-    justificar: ["parent"]
+    justificar: ["parent"],
+    historial_asist: ["teacher"]
   };
 
   const displayName = user?.name || user?.given_name ? `${user?.given_name || ""} ${user?.family_name || ""}`.trim() : (user?.email?.split("@")[0] || "Usuario");
@@ -83,6 +87,7 @@ export function DashboardShell({ user }: DashboardShellProps) {
     { id: "asistencia", label: "Asistencia", icon: CalendarCheck },
     { id: "justificaciones", label: "Justificaciones", icon: ClipboardList },
     { id: "justificar", label: "Justificar", icon: Bot },
+    { id: "historial_asist", label: "Historial Asist.", icon: History },
   ];
 
   // Decode Cognito groups and filter visible items
@@ -279,6 +284,12 @@ export function DashboardShell({ user }: DashboardShellProps) {
               <JustifyChatView />
             ) : activeTab === "asistencia" ? (
               <AttendanceView />
+            ) : activeTab === "cursos" ? (
+              <CoursesView />
+            ) : activeTab === "estudiantes" ? (
+              <StudentsView user={user} />
+            ) : activeTab === "historial_asist" ? (
+              <AttendanceHistoryView />
             ) : (
               /* Content box fallback (White Card with border-border) */
               <div className="bg-card border border-border rounded-2xl p-8 min-h-[300px] flex items-center justify-center text-muted-foreground border-dashed">
