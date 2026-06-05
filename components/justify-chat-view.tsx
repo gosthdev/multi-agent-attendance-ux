@@ -68,7 +68,7 @@ const formatStudentLabel = (student: Student) => {
 };
 
 export function JustifyChatView() {
-  const [sessionId, setSessionId] = useState(() => createSessionId());
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [selectedStudentId, setSelectedStudentId] = useState<string>("");
   const [students, setStudents] = useState<Student[]>([]);
   const [studentsLoading, setStudentsLoading] = useState(true);
@@ -146,27 +146,94 @@ export function JustifyChatView() {
 
     try {
       const token = requireToken();
+      
+      // Build request body - only include sessionId if it exists
+      const requestBody: any = {
+        studentId: selectedStudentId,
+        content: userMessage.content,
+        attachments: []
+      };
+      
+      if (sessionId) {
+        requestBody.sessionId = sessionId;
+      }
+      
       const response = await fetch(`${apiPrefix}/attendance/justify/chat`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          sessionId,
-          studentId: selectedStudentId,
-          content: userMessage.content,
-          attachments: []
-        })
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText || "Error del servidor"}`);
 
-      const data = await response.json();
+      const responseText = await response.text();
+      console.log("Raw response from server:", responseText);
+      
+      // Parse SSE format: "event: <type>\ndata: <json>"
+      const lines = responseText.split('\n');
+      let currentEventType = '';
+      let assistantContent = '';
+      
+      for (const line of lines) {
+        if (line.startsWith('event:')) {
+          currentEventType = line.replace('event:', '').trim();
+        } else if (line.startsWith('data:')) {
+          const eventData = line.replace('data:', '').trim();
+          
+          if (currentEventType === 'session_created') {
+            try {
+              const sessionData = JSON.parse(eventData);
+              // Handle both snake_case and camelCase just in case
+              const newSessionId = sessionData.sessionId || sessionData.session_id;
+              if (newSessionId) {
+                setSessionId(newSessionId);
+                console.log("New session created:", newSessionId);
+              }
+            } catch (e) {
+              console.error("Failed to parse session_created data:", e);
+            }
+          } else if (currentEventType === 'error') {
+            try {
+              const errorObj = JSON.parse(eventData);
+              let errorMessage = errorObj.message || 'Error del servidor';
+              
+              if (typeof errorMessage === 'string' && errorMessage.includes('{"type":"error"')) {
+                try {
+                  const nestedError = JSON.parse(errorMessage);
+                  errorMessage = nestedError.error?.message || errorMessage;
+                } catch (e) {
+                  errorMessage = errorMessage.split('\n')[0];
+                }
+              }
+              throw new Error(errorMessage);
+            } catch (e: any) {
+              throw new Error(eventData || 'Error desconocido del servidor');
+            }
+          } else if (currentEventType === 'message') {
+            try {
+              const msgData = JSON.parse(eventData);
+              const content = msgData.content || msgData.message || msgData.response || msgData.answer;
+              if (content) {
+                assistantContent = content;
+              }
+            } catch (e) {
+              console.error("Failed to parse message data:", e);
+            }
+          }
+        }
+      }
+
+      if (!assistantContent) {
+        assistantContent = "No se recibió una respuesta del agente, o el formato es inesperado.";
+      }
+
       const assistantMessage: ChatMessage = {
         id: `assistant-${Date.now()}`,
         role: "assistant",
-        content: extractResponseMessage(data),
+        content: assistantContent,
         createdAt: new Date().toISOString()
       };
 
