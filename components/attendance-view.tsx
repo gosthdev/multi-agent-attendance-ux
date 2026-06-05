@@ -269,3 +269,40 @@ function CameraFeed({
     </div>
   );
 }
+
+export function AttendanceView() {
+  return (
+    <div className="space-y-6 font-sans">
+      <Toaster position="top-right" closeButton richColors theme="light" />
+
+      <Tabs defaultValue="asistencia" className="w-full">
+        <TabsList className="mb-6 max-w-sm">
+          <TabsTrigger value="asistencia" className="gap-2 cursor-pointer" id="tab-asistencia">
+            <Scan className="h-4 w-4" />
+            Registrar Asistencia
+          </TabsTrigger>
+          <TabsTrigger value="rostro" className="gap-2 cursor-pointer" id="tab-rostro">
+            <UserPlus className="h-4 w-4" />
+            Registrar Rostro
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="asistencia">
+          <AttendanceScanPanel />
+        </TabsContent>
+
+        <TabsContent value="rostro">
+          <FaceRegistrationPanel />
+        </TabsContent>
+      </Tabs>
+
+      <style>{`
+        @keyframes scanLine {
+          0%   { transform: translateY(-80px); opacity: 0.8; }
+          50%  { transform: translateY(80px);  opacity: 1;   }
+          100% { transform: translateY(-80px); opacity: 0.8; }
+        }
+      `}</style>
+    </div>
+  );
+}
