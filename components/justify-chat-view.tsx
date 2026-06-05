@@ -86,6 +86,7 @@ export function JustifyChatView() {
     }
   ]);
   const [isSending, setIsSending] = useState(false);
+  const [agentStatus, setAgentStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -171,59 +172,81 @@ export function JustifyChatView() {
       });
 
       if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText || "Error del servidor"}`);
+      if (!response.body) throw new Error("No hay respuesta del servidor.");
 
-      const responseText = await response.text();
-      console.log("Raw response from server:", responseText);
+      setAgentStatus("Iniciando...");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let done = false;
+      let buffer = "";
       
-      // Parse SSE format: "event: <type>\ndata: <json>"
-      const lines = responseText.split('\n');
       let currentEventType = '';
       let assistantContent = '';
-      
-      for (const line of lines) {
-        if (line.startsWith('event:')) {
-          currentEventType = line.replace('event:', '').trim();
-        } else if (line.startsWith('data:')) {
-          const eventData = line.replace('data:', '').trim();
+
+      while (!done) {
+        const { value, done: readerDone } = await reader.read();
+        done = readerDone;
+        if (value) {
+          buffer += decoder.decode(value, { stream: true });
           
-          if (currentEventType === 'session_created') {
-            try {
-              const sessionData = JSON.parse(eventData);
-              // Handle both snake_case and camelCase just in case
-              const newSessionId = sessionData.sessionId || sessionData.session_id;
-              if (newSessionId) {
-                setSessionId(newSessionId);
-                console.log("New session created:", newSessionId);
-              }
-            } catch (e) {
-              console.error("Failed to parse session_created data:", e);
-            }
-          } else if (currentEventType === 'error') {
-            try {
-              const errorObj = JSON.parse(eventData);
-              let errorMessage = errorObj.message || 'Error del servidor';
+          const lines = buffer.split('\n');
+          // keep the last partial line in the buffer
+          buffer = lines.pop() || ""; 
+          
+          for (const line of lines) {
+            if (line.startsWith('event:')) {
+              currentEventType = line.replace('event:', '').trim();
+            } else if (line.startsWith('data:')) {
+              const eventData = line.replace('data:', '').trim();
               
-              if (typeof errorMessage === 'string' && errorMessage.includes('{"type":"error"')) {
+              if (currentEventType === 'session_created') {
                 try {
-                  const nestedError = JSON.parse(errorMessage);
-                  errorMessage = nestedError.error?.message || errorMessage;
+                  const sessionData = JSON.parse(eventData);
+                  const newSessionId = sessionData.sessionId || sessionData.session_id;
+                  if (newSessionId) {
+                    setSessionId(newSessionId);
+                  }
                 } catch (e) {
-                  errorMessage = errorMessage.split('\n')[0];
+                  console.error("Failed to parse session_created data:", e);
+                }
+              } else if (currentEventType === 'status') {
+                try {
+                  const statusData = JSON.parse(eventData);
+                  if (statusData.message) {
+                    setAgentStatus(statusData.message);
+                  }
+                } catch (e) {
+                  console.error("Failed to parse status data:", e);
+                }
+              } else if (currentEventType === 'error') {
+                try {
+                  const errorObj = JSON.parse(eventData);
+                  let errorMessage = errorObj.message || 'Error del servidor';
+                  
+                  if (typeof errorMessage === 'string' && errorMessage.includes('{"type":"error"')) {
+                    try {
+                      const nestedError = JSON.parse(errorMessage);
+                      errorMessage = nestedError.error?.message || errorMessage;
+                    } catch (e) {
+                      errorMessage = errorMessage.split('\n')[0];
+                    }
+                  }
+                  throw new Error(errorMessage);
+                } catch (e: any) {
+                  throw new Error(eventData || 'Error desconocido del servidor');
+                }
+              } else if (currentEventType === 'message') {
+                try {
+                  const msgData = JSON.parse(eventData);
+                  const content = msgData.content || msgData.message || msgData.response || msgData.answer;
+                  if (content) {
+                    assistantContent = content;
+                  }
+                } catch (e) {
+                  console.error("Failed to parse message data:", e);
                 }
               }
-              throw new Error(errorMessage);
-            } catch (e: any) {
-              throw new Error(eventData || 'Error desconocido del servidor');
-            }
-          } else if (currentEventType === 'message') {
-            try {
-              const msgData = JSON.parse(eventData);
-              const content = msgData.content || msgData.message || msgData.response || msgData.answer;
-              if (content) {
-                assistantContent = content;
-              }
-            } catch (e) {
-              console.error("Failed to parse message data:", e);
             }
           }
         }
@@ -246,6 +269,7 @@ export function JustifyChatView() {
       setError(err?.message || "Error al enviar el mensaje al agente.");
     } finally {
       setIsSending(false);
+      setAgentStatus(null);
     }
   };
 
@@ -351,8 +375,12 @@ export function JustifyChatView() {
               ))}
               {isSending && (
                 <div className="flex justify-start">
-                  <div className="max-w-[70%] rounded-2xl px-4 py-3 text-sm bg-slate-100 text-slate-500">
-                    Escribiendo...
+                  <div className="max-w-[70%] rounded-2xl px-4 py-3 text-sm bg-slate-100 text-slate-500 flex items-center gap-3">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-slate-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-slate-500"></span>
+                    </span>
+                    {agentStatus || "Escribiendo..."}
                   </div>
                 </div>
               )}
