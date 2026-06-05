@@ -306,3 +306,178 @@ export function AttendanceView() {
     </div>
   );
 }
+
+function AttendanceScanPanel() {
+  const { videoRef, canvasRef, cameraReady, cameraError, startCamera, stopCamera, captureJpeg } =
+    useCamera();
+  const scanTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [uiState, setUiState] = useState<ScanPhase>({ phase: "idle" });
+
+  useEffect(() => {
+    startCamera();
+    return () => {
+      stopCamera();
+      if (scanTimerRef.current) clearTimeout(scanTimerRef.current);
+    };
+  }, [startCamera, stopCamera]);
+
+  const captureAndSend = useCallback(async () => {
+    setUiState({ phase: "processing" });
+    const photo = await captureJpeg(0.85, 0.5, 50);
+    if (!photo) {
+      setUiState({ phase: "error", message: "No se pudo capturar la imagen." });
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("photo", photo);
+
+    try {
+      const res = await fetch(`${getApiPrefix()}/attendance/schedule`, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        const msg =
+          data?.message ||
+          (res.status === 409
+            ? "La asistencia ya fue registrada para este horario hoy."
+            : res.status === 400
+            ? "No se encontró coincidencia facial o no hay horario activo."
+            : "Error al registrar la asistencia.");
+        setUiState({ phase: "error", message: msg });
+        return;
+      }
+      setUiState({ phase: "success", result: data as AttendanceResult });
+      toast.success("Asistencia registrada correctamente");
+    } catch {
+      setUiState({ phase: "error", message: "No se pudo conectar con el servidor." });
+    }
+  }, [captureJpeg]);
+
+  const startScan = useCallback(() => {
+    setUiState({ phase: "scanning" });
+    scanTimerRef.current = setTimeout(() => captureAndSend(), 2000);
+  }, [captureAndSend]);
+
+  const reset = useCallback(() => {
+    if (scanTimerRef.current) clearTimeout(scanTimerRef.current);
+    setUiState({ phase: "idle" });
+  }, []);
+
+  const isProcessing = uiState.phase === "scanning" || uiState.phase === "processing";
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+      {/* Camera card */}
+      <div className="lg:col-span-3 space-y-4">
+        <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+          {/* Header */}
+          <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Camera className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground leading-tight">
+                  Reconocimiento Facial
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  Coloca tu rostro frente a la cámara
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  cameraReady ? "bg-emerald-500 animate-pulse" : "bg-red-400"
+                }`}
+              />
+              <span className="text-[11px] text-muted-foreground">
+                {cameraReady ? "En vivo" : "Sin señal"}
+              </span>
+            </div>
+          </div>
+
+          {/* Feed */}
+          <div className="p-4">
+            <CameraFeed
+              videoRef={videoRef}
+              canvasRef={canvasRef}
+              cameraReady={cameraReady}
+              cameraError={cameraError}
+              onRetry={startCamera}
+              scanning={uiState.phase === "scanning"}
+              processing={uiState.phase === "processing"}
+              processingLabel="Verificando identidad…"
+            />
+          </div>
+
+          {/* Actions */}
+          <div className="px-5 pb-4 flex flex-col sm:flex-row gap-3 items-center justify-between">
+            {uiState.phase === "idle" && (
+              <>
+                <p className="text-xs text-muted-foreground">
+                  Presiona el botón y coloca tu rostro en el encuadre.
+                </p>
+                <Button
+                  onClick={startScan}
+                  disabled={!cameraReady}
+                  className="gap-2 cursor-pointer"
+                  id="btn-scan-attendance"
+                >
+                  <Scan className="h-4 w-4" />
+                  Registrar Asistencia
+                </Button>
+              </>
+            )}
+            {isProcessing && (
+              <>
+                <p className="text-xs text-muted-foreground animate-pulse">
+                  {uiState.phase === "scanning" ? "Preparando captura…" : "Enviando al servidor…"}
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={reset}
+                  disabled={uiState.phase === "processing"}
+                  className="gap-2 cursor-pointer"
+                >
+                  Cancelar
+                </Button>
+              </>
+            )}
+            {(uiState.phase === "success" || uiState.phase === "error") && (
+              <>
+                <p className="text-xs text-muted-foreground">
+                  {uiState.phase === "success"
+                    ? "Asistencia registrada. ¿Siguiente estudiante?"
+                    : "Ocurrió un problema. Intenta de nuevo."}
+                </p>
+                <Button
+                  onClick={reset}
+                  variant={uiState.phase === "error" ? "destructive" : "outline"}
+                  className="gap-2 cursor-pointer"
+                  id="btn-scan-again"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Escanear de nuevo
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Info / result panel */}
+      <div className="lg:col-span-2 space-y-4">
+        {uiState.phase === "success" && <AttendanceResultCard result={uiState.result} />}
+        {uiState.phase === "error" && <ErrorCard message={uiState.message} />}
+        {(uiState.phase === "idle" || isProcessing) && (
+          <AttendanceInstructionsCard scanning={isProcessing} />
+        )}
+      </div>
+    </div>
+  );
+}
