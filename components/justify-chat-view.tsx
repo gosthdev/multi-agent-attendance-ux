@@ -44,6 +44,9 @@ const getCookie = (name: string) => {
 const requireToken = () => {
   const token = getCookie("id_token");
   if (!token) {
+    if (typeof window !== "undefined") {
+      window.location.href = "/auth/sign-in";
+    }
     throw new Error("No se encontro el token de sesion. Inicia sesion nuevamente.");
   }
   return token;
