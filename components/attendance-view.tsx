@@ -513,6 +513,8 @@ function FaceRegistrationPanel() {
   );
 }
 
+// ── Step 1: Search student ───────────────────────────────────────────────────
+
 function StudentSearchStep({ onSelect }: { onSelect: (s: Student) => void }) {
   const [query, setQuery] = useState("");
   const [students, setStudents] = useState<Student[]>([]);
@@ -642,6 +644,222 @@ function StudentSearchStep({ onSelect }: { onSelect: (s: Student) => void }) {
               </button>
             ))}
           </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Step 2: Capture face ──────────────────────────────────────────────────────
+
+function FaceCaptureStep({
+  faceStep,
+  setFaceStep,
+  onBack,
+}: {
+  faceStep: FaceRegStep;
+  setFaceStep: React.Dispatch<React.SetStateAction<FaceRegStep>>;
+  onBack: () => void;
+}) {
+  const { videoRef, canvasRef, cameraReady, cameraError, startCamera, stopCamera, captureJpeg } =
+    useCamera();
+  const scanTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const student =
+    faceStep.step === "capture" ||
+    faceStep.step === "uploading" ||
+    faceStep.step === "done" ||
+    (faceStep.step === "error" && faceStep.student)
+      ? (faceStep as { student: Student }).student
+      : null;
+
+  useEffect(() => {
+    if (faceStep.step === "capture") {
+      startCamera();
+    }
+    return () => {
+      stopCamera();
+      if (scanTimerRef.current) clearTimeout(scanTimerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const captureAndUpload = useCallback(async () => {
+    if (!student) return;
+    setFaceStep({ step: "uploading", student });
+
+    const photo = await captureJpeg(0.9, 0.7, 150);
+    if (!photo) {
+      setFaceStep({ step: "error", student, message: "No se pudo capturar la imagen." });
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("photo", photo);
+
+    try {
+      const token = getCookie("id_token");
+      const res = await fetch(`${getApiPrefix()}/attendance/${student.id}/rekognition`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        const msg =
+          data?.message ||
+          (res.status === 404
+            ? "Estudiante no encontrado."
+            : res.status === 422
+            ? "La imagen no cumple los requisitos (máx. 150 KB, JPEG/PNG)."
+            : "No se pudo registrar el rostro.");
+        setFaceStep({ step: "error", student, message: msg });
+        return;
+      }
+
+      setFaceStep({ step: "done", student, message: data?.message || "Rostro registrado exitosamente" });
+      toast.success("Rostro registrado en AWS Rekognition");
+    } catch {
+      setFaceStep({ step: "error", student, message: "No se pudo conectar con el servidor." });
+    }
+  }, [student, captureJpeg, setFaceStep]);
+
+  const startScan = useCallback(() => {
+    setFaceStep((prev) => ({ ...prev, step: "capture" } as FaceRegStep));
+    // Brief delay for user to position
+    scanTimerRef.current = setTimeout(() => captureAndUpload(), 2500);
+  }, [captureAndUpload, setFaceStep]);
+
+  const resetToCapture = () => {
+    if (scanTimerRef.current) clearTimeout(scanTimerRef.current);
+    if (student) {
+      setFaceStep({ step: "capture", student });
+      startCamera();
+    }
+  };
+
+  const isUploading = faceStep.step === "uploading";
+  const isDone = faceStep.step === "done";
+  const isError = faceStep.step === "error";
+  const isScanReady = faceStep.step === "capture" && cameraReady;
+
+  return (
+    <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+      {/* Header with student info */}
+      <div className="px-5 py-4 border-b border-border">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-3 group"
+        >
+          <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform" />
+          Cambiar estudiante
+        </button>
+        {student && (
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <User className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-foreground">{getStudentName(student)}</p>
+              <p className="text-[11px] text-muted-foreground">DNI: {student.documentNumber}</p>
+            </div>
+            {student.rekognitionId && (
+              <Badge className="ml-auto text-[10px] bg-amber-500/15 text-amber-700 border-amber-200 border">
+                <Fingerprint className="h-3 w-3 mr-1" />
+                Actualizar
+              </Badge>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Camera / result area */}
+      <div className="p-4 space-y-4">
+        {/* Success state */}
+        {isDone && (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-5 flex flex-col items-center gap-3 text-center animate-in fade-in">
+            <BadgeCheck className="h-12 w-12 text-emerald-500" />
+            <div>
+              <p className="font-bold text-emerald-800 text-sm">¡Rostro Registrado!</p>
+              <p className="text-xs text-emerald-700 mt-1">
+                {(faceStep as { message: string }).message}
+              </p>
+              <p className="text-xs text-emerald-600 mt-0.5">
+                El estudiante ya puede registrar asistencia facialmente.
+              </p>
+            </div>
+            <div className="flex gap-2 mt-1">
+              <Button size="sm" variant="outline" onClick={onBack} className="gap-1.5 cursor-pointer">
+                <Search className="h-3.5 w-3.5" />
+                Otro estudiante
+              </Button>
+              <Button size="sm" onClick={resetToCapture} className="gap-1.5 cursor-pointer">
+                <RefreshCw className="h-3.5 w-3.5" />
+                Nueva foto
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Error state */}
+        {isError && (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4 space-y-3 animate-in fade-in">
+            <div className="flex items-center gap-2 text-red-700">
+              <ShieldAlert className="h-5 w-5" />
+              <span className="font-bold text-sm">Error al registrar</span>
+            </div>
+            <p className="text-xs text-red-600">{(faceStep as { message: string }).message}</p>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={onBack} className="gap-1.5 cursor-pointer">
+                <ArrowLeft className="h-3.5 w-3.5" />
+                Volver
+              </Button>
+              <Button size="sm" onClick={resetToCapture} className="gap-1.5 cursor-pointer">
+                <RefreshCw className="h-3.5 w-3.5" />
+                Reintentar
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Camera when capturing or uploading */}
+        {(faceStep.step === "capture" || isUploading) && (
+          <>
+            <CameraFeed
+              videoRef={videoRef}
+              canvasRef={canvasRef}
+              cameraReady={cameraReady}
+              cameraError={cameraError}
+              onRetry={startCamera}
+              scanning={false}
+              processing={isUploading}
+              processingLabel="Subiendo a Rekognition…"
+            />
+
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs text-muted-foreground">
+                {isUploading
+                  ? "Enviando foto al servidor…"
+                  : cameraReady
+                  ? "Centra el rostro del estudiante y captura."
+                  : "Iniciando cámara…"}
+              </p>
+              <Button
+                onClick={startScan}
+                disabled={!isScanReady || isUploading}
+                className="gap-2 cursor-pointer shrink-0"
+                id="btn-capture-face"
+              >
+                {isUploading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Camera className="h-4 w-4" />
+                )}
+                {isUploading ? "Subiendo…" : "Capturar Rostro"}
+              </Button>
+            </div>
+          </>
         )}
       </div>
     </div>
