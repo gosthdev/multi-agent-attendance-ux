@@ -95,3 +95,88 @@ const STATUS_CONFIG: Record<
     icon: <CheckCircle2 className="h-5 w-5 text-blue-600" />,
   },
 };
+
+function getStudentName(s: { firstName?: string; lastName?: string }): string {
+  return `${s.firstName || ""} ${s.lastName || ""}`.trim() || "Estudiante";
+}
+
+function blobToFile(blob: Blob, filename: string, maxKB: number): File {
+  // We just wrap; caller handles quality reduction
+  return new File([blob], filename, { type: blob.type });
+}
+
+function getCookie(name: string): string {
+  if (typeof document === "undefined") return "";
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(";").shift() || "";
+  return "";
+}
+
+function useCamera() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [cameraReady, setCameraReady] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+
+  const startCamera = useCallback(async () => {
+    setCameraError(null);
+    setCameraReady(false);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
+        audio: false,
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play();
+          setCameraReady(true);
+        };
+      }
+    } catch {
+      setCameraError(
+        "No se pudo acceder a la cámara. Permite el acceso en tu navegador."
+      );
+    }
+  }, []);
+
+  const stopCamera = useCallback(() => {
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    setCameraReady(false);
+  }, []);
+
+  const captureJpeg = useCallback(
+    async (qualityHigh: number, qualityLow: number, maxKB: number): Promise<File | null> => {
+      if (!videoRef.current || !canvasRef.current || !cameraReady) return null;
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const toBlob = (quality: number): Promise<Blob> =>
+        new Promise((resolve, reject) =>
+          canvas.toBlob(
+            (b) => (b ? resolve(b) : reject(new Error("Canvas empty"))),
+            "image/jpeg",
+            quality
+          )
+        );
+
+      let blob = await toBlob(qualityHigh);
+      if (blob.size > maxKB * 1024) {
+        blob = await toBlob(qualityLow);
+      }
+      return new File([blob], "photo.jpg", { type: "image/jpeg" });
+    },
+    [cameraReady]
+  );
+
+  return { videoRef, canvasRef, cameraReady, cameraError, startCamera, stopCamera, captureJpeg };
+}
