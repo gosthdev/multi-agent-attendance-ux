@@ -865,3 +865,219 @@ function FaceCaptureStep({
     </div>
   );
 }
+
+// ─── Guide cards ──────────────────────────────────────────────────────────────
+
+function AttendanceResultCard({ result }: { result: AttendanceResult }) {
+  const cfg = STATUS_CONFIG[result.status] ?? STATUS_CONFIG.PRESENT;
+  const studentName = getStudentName(result.student);
+  const courseName = result.schedule?.course?.name || "—";
+  const classroom = result.schedule?.classroom?.name || "—";
+  const timeRange = result.schedule
+    ? `${result.schedule.startTime} – ${result.schedule.endTime}`
+    : "—";
+
+  return (
+    <div
+      className={`rounded-2xl border p-5 space-y-4 animate-in fade-in slide-in-from-bottom-3 duration-300 ${cfg.color}`}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {cfg.icon}
+          <span className="font-bold text-base">{cfg.label}</span>
+        </div>
+        <Badge variant="outline" className="text-[11px] font-semibold">
+          {result.status}
+        </Badge>
+      </div>
+      <div className="border-t border-current/10 pt-4 space-y-3">
+        <InfoRow icon={<User className="h-3.5 w-3.5" />} label="Estudiante">
+          <p className="text-sm font-semibold leading-tight">{studentName}</p>
+          {result.student.documentNumber && (
+            <p className="text-[11px] opacity-70">DNI: {result.student.documentNumber}</p>
+          )}
+        </InfoRow>
+        <InfoRow icon={<BookOpen className="h-3.5 w-3.5" />} label="Curso">
+          <p className="text-sm font-semibold leading-tight">{courseName}</p>
+          <p className="text-[11px] opacity-70">Aula: {classroom} · {timeRange}</p>
+        </InfoRow>
+        <InfoRow icon={<Clock className="h-3.5 w-3.5" />} label="Hora de registro">
+          <p className="text-sm font-semibold leading-tight">
+            {new Date().toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+          </p>
+          <p className="text-[11px] opacity-70">
+            {new Date().toLocaleDateString("es-PE", { weekday: "long", day: "numeric", month: "long" })}
+          </p>
+        </InfoRow>
+      </div>
+    </div>
+  );
+}
+
+function InfoRow({
+  icon,
+  label,
+  children,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="h-7 w-7 rounded-lg bg-white/60 flex items-center justify-center shrink-0 mt-0.5">
+        {icon}
+      </div>
+      <div>
+        <p className="text-[10px] uppercase tracking-widest opacity-60 font-semibold">{label}</p>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function ErrorCard({ message }: { message: string }) {
+  return (
+    <div className="rounded-2xl border border-red-200 bg-red-50 p-5 space-y-3 animate-in fade-in slide-in-from-bottom-3 duration-300">
+      <div className="flex items-center gap-2 text-red-700">
+        <ShieldAlert className="h-5 w-5 shrink-0" />
+        <span className="font-bold text-sm">Error de verificación</span>
+      </div>
+      <p className="text-xs text-red-600 leading-relaxed">{message}</p>
+    </div>
+  );
+}
+
+function AttendanceInstructionsCard({ scanning }: { scanning: boolean }) {
+  const steps = [
+    { icon: <Camera className="h-4 w-4 text-primary" />, text: "Asegúrate de que haya buena iluminación." },
+    { icon: <Scan className="h-4 w-4 text-primary" />, text: 'Presiona "Registrar Asistencia" para iniciar.' },
+    { icon: <User className="h-4 w-4 text-primary" />, text: "Coloca el rostro dentro del encuadre." },
+    { icon: <CheckCircle2 className="h-4 w-4 text-primary" />, text: "El sistema capturará la foto automáticamente." },
+  ];
+  return (
+    <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+      <div className="flex items-center gap-2">
+        <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+          <Scan className="h-3.5 w-3.5 text-primary" />
+        </div>
+        <p className="text-sm font-semibold text-foreground">Cómo usar el lector</p>
+      </div>
+      <ol className="space-y-3">
+        {steps.map((step, i) => (
+          <li key={i} className="flex items-start gap-3">
+            <div className="h-6 w-6 rounded-md bg-primary/8 flex items-center justify-center shrink-0 mt-0.5">
+              {step.icon}
+            </div>
+            <p className={`text-xs leading-relaxed ${scanning && i === 1 ? "text-primary font-semibold" : "text-muted-foreground"}`}>
+              {step.text}
+            </p>
+          </li>
+        ))}
+      </ol>
+      {scanning && (
+        <div className="flex items-center gap-2 pt-2 border-t border-border">
+          <Loader2 className="h-3.5 w-3.5 text-primary animate-spin" />
+          <p className="text-xs text-primary font-medium animate-pulse">Procesando…</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FaceRegGuideCard({ step }: { step: string }) {
+  const steps = [
+    {
+      icon: <Search className="h-4 w-4 text-primary" />,
+      text: "Busca al estudiante por nombre, apellido o DNI.",
+      active: step === "search",
+    },
+    {
+      icon: <User className="h-4 w-4 text-primary" />,
+      text: "Selecciona al estudiante de la lista de resultados.",
+      active: step === "search",
+    },
+    {
+      icon: <Camera className="h-4 w-4 text-primary" />,
+      text: "Centra el rostro del estudiante frente a la cámara.",
+      active: step === "capture",
+    },
+    {
+      icon: <Fingerprint className="h-4 w-4 text-primary" />,
+      text: 'Presiona "Capturar Rostro" para registrarlo en Rekognition.',
+      active: step === "capture",
+    },
+    {
+      icon: <BadgeCheck className="h-4 w-4 text-primary" />,
+      text: "El rostro quedará enlazado al estudiante para la asistencia.",
+      active: step === "done",
+    },
+  ];
+
+  return (
+    <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+      <div className="flex items-center gap-2">
+        <div className="h-7 w-7 rounded-lg bg-primary/10 flex items-center justify-center">
+          <UserPlus className="h-3.5 w-3.5 text-primary" />
+        </div>
+        <p className="text-sm font-semibold text-foreground">Registro de Rostro</p>
+      </div>
+
+      {/* Step indicators */}
+      <div className="flex items-center gap-2 mb-1">
+        {["search", "capture", "done"].map((s, i) => (
+          <React.Fragment key={s}>
+            <div
+              className={`h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-bold transition-colors ${
+                step === s
+                  ? "bg-primary text-white"
+                  : ["done", "capture"].includes(step) && i === 0
+                  ? "bg-emerald-500 text-white"
+                  : step === "done" && i === 1
+                  ? "bg-emerald-500 text-white"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {i + 1}
+            </div>
+            {i < 2 && <div className={`flex-1 h-0.5 rounded-full ${step !== "search" && i === 0 ? "bg-emerald-400" : step === "done" && i === 1 ? "bg-emerald-400" : "bg-border"}`} />}
+          </React.Fragment>
+        ))}
+      </div>
+      <p className="text-[11px] text-muted-foreground flex justify-between">
+        <span>Buscar</span>
+        <span>Capturar</span>
+        <span>Listo</span>
+      </p>
+
+      <div className="border-t border-border pt-3 space-y-3">
+        {steps.map((s, i) => (
+          <div key={i} className="flex items-start gap-3">
+            <div
+              className={`h-6 w-6 rounded-md flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
+                s.active ? "bg-primary/15" : "bg-muted"
+              }`}
+            >
+              {s.icon}
+            </div>
+            <p
+              className={`text-xs leading-relaxed transition-colors ${
+                s.active ? "text-foreground font-medium" : "text-muted-foreground"
+              }`}
+            >
+              {s.text}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-amber-50 border border-amber-100 rounded-xl p-3">
+        <p className="text-[11px] text-amber-700 leading-relaxed">
+          <span className="font-semibold">Nota:</span> La foto del rostro debe pesar máx.{" "}
+          <strong>150 KB</strong> y estar en formato JPEG o PNG. Usa buena iluminación y
+          asegúrate de que el rostro esté descubierto y bien centrado.
+        </p>
+      </div>
+    </div>
+  );
+}
