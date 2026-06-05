@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { 
   Shield,
@@ -25,8 +26,11 @@ import { Button } from "@/components/ui/button";
 import { ClassroomsView } from "@/components/classrooms-view";
 import { AdministrationView } from "@/components/administration-view";
 import { JustifyChatView } from "@/components/justify-chat-view";
-import { CoursesView } from "@/components/courses-view";
-import { StudentsView } from "@/components/students-view";
+const AttendanceView = dynamic(
+  () => import("@/components/attendance-view").then((m) => ({ default: m.AttendanceView })),
+  { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl p-8 min-h-[300px] flex items-center justify-center text-muted-foreground text-sm">Cargando módulo de asistencia…</div> }
+);
+
 
 interface DashboardShellProps {
   user: {
@@ -273,11 +277,9 @@ export function DashboardShell({ user }: DashboardShellProps) {
               <AdministrationView user={user} />
             ) : activeTab === "justificar" ? (
               <JustifyChatView />
-            ) : activeTab === "cursos" ? (
-              <CoursesView />
-            ) : activeTab === "estudiantes" ? (
-              <StudentsView user={user} />
-            ) :(
+            ) : activeTab === "asistencia" ? (
+              <AttendanceView />
+            ) : (
               /* Content box fallback (White Card with border-border) */
               <div className="bg-card border border-border rounded-2xl p-8 min-h-[300px] flex items-center justify-center text-muted-foreground border-dashed">
                 Módulo de {activeModule.label.toLowerCase()} en desarrollo
