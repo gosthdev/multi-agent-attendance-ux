@@ -180,3 +180,92 @@ function useCamera() {
 
   return { videoRef, canvasRef, cameraReady, cameraError, startCamera, stopCamera, captureJpeg };
 }
+
+interface CameraFeedProps {
+  videoRef: React.RefObject<HTMLVideoElement | null>;
+  canvasRef: React.RefObject<HTMLCanvasElement | null>;
+  cameraReady: boolean;
+  cameraError: string | null;
+  onRetry: () => void;
+  scanning?: boolean;
+  processing?: boolean;
+  processingLabel?: string;
+}
+
+function CameraFeed({
+  videoRef,
+  canvasRef,
+  cameraReady,
+  cameraError,
+  onRetry,
+  scanning = false,
+  processing = false,
+  processingLabel = "Procesando…",
+}: CameraFeedProps) {
+  return (
+    <div className="relative bg-zinc-950 aspect-video flex items-center justify-center overflow-hidden rounded-xl">
+      {cameraError ? (
+        <div className="flex flex-col items-center gap-3 text-center p-6">
+          <CameraOff className="h-10 w-10 text-zinc-600" />
+          <p className="text-xs text-zinc-400 max-w-xs">{cameraError}</p>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onRetry}
+            className="text-xs gap-1.5 border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+          >
+            <RefreshCw className="h-3.5 w-3.5" /> Reintentar
+          </Button>
+        </div>
+      ) : (
+        <>
+          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+          <video
+            ref={videoRef}
+            className="w-full h-full object-cover scale-x-[-1]"
+            autoPlay
+            playsInline
+            muted
+          />
+
+          {/* Scan frame (always) */}
+          {!scanning && !processing && cameraReady && (
+            <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+              <div className="relative w-44 h-52 opacity-30">
+                <span className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-white rounded-tl-md" />
+                <span className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-white rounded-tr-md" />
+                <span className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-white rounded-bl-md" />
+                <span className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-white rounded-br-md" />
+              </div>
+            </div>
+          )}
+
+          {/* Scanning overlay */}
+          {scanning && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[1px]">
+              <div className="relative w-44 h-52">
+                <span className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-primary rounded-tl-md animate-pulse" />
+                <span className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-primary rounded-tr-md animate-pulse" />
+                <span className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-primary rounded-bl-md animate-pulse" />
+                <span className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-primary rounded-br-md animate-pulse" />
+                <div className="absolute left-0 right-0 h-0.5 bg-primary/70 top-1/2 animate-[scanLine_1.5s_ease-in-out_infinite]" />
+              </div>
+              <p className="mt-4 text-xs text-white/80 animate-pulse">
+                Escaneando rostro…
+              </p>
+            </div>
+          )}
+
+          {/* Processing overlay */}
+          {processing && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm">
+              <Loader2 className="h-10 w-10 text-primary animate-spin" />
+              <p className="mt-3 text-xs text-white/80">{processingLabel}</p>
+            </div>
+          )}
+        </>
+      )}
+      <canvas ref={canvasRef} className="hidden" />
+    </div>
+  );
+}
