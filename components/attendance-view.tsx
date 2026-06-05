@@ -481,3 +481,169 @@ function AttendanceScanPanel() {
     </div>
   );
 }
+
+function FaceRegistrationPanel() {
+  const [faceStep, setFaceStep] = useState<FaceRegStep>({ step: "search" });
+
+  const goToCapture = (student: Student) => setFaceStep({ step: "capture", student });
+  const goToSearch = () => setFaceStep({ step: "search" });
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+      {/* Left: step content */}
+      <div className="lg:col-span-3 space-y-4">
+        {faceStep.step === "search" && <StudentSearchStep onSelect={goToCapture} />}
+        {(faceStep.step === "capture" ||
+          faceStep.step === "uploading" ||
+          faceStep.step === "done" ||
+          faceStep.step === "error") && (
+          <FaceCaptureStep
+            faceStep={faceStep}
+            setFaceStep={setFaceStep}
+            onBack={goToSearch}
+          />
+        )}
+      </div>
+
+      {/* Right: guide card */}
+      <div className="lg:col-span-2">
+        <FaceRegGuideCard step={faceStep.step} />
+      </div>
+    </div>
+  );
+}
+
+function StudentSearchStep({ onSelect }: { onSelect: (s: Student) => void }) {
+  const [query, setQuery] = useState("");
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const search = async () => {
+    if (!query.trim()) return;
+    setLoading(true);
+    setError(null);
+    setSearched(false);
+    try {
+      const token = getCookie("id_token");
+      const res = await fetch(`${getApiPrefix()}/students`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Error al obtener estudiantes");
+      const all: Student[] = await res.json();
+      const q = query.toLowerCase();
+      const filtered = all.filter(
+        (s) =>
+          s.firstName?.toLowerCase().includes(q) ||
+          s.lastName?.toLowerCase().includes(q) ||
+          s.documentNumber?.includes(q)
+      );
+      setStudents(filtered);
+      setSearched(true);
+    } catch {
+      setError("No se pudieron cargar los estudiantes. Verifica la conexión.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") search();
+  };
+
+  return (
+    <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+      <div className="px-5 py-4 border-b border-border flex items-center gap-2.5">
+        <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
+          <Search className="h-4 w-4 text-primary" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-foreground">Buscar Estudiante</p>
+          <p className="text-[11px] text-muted-foreground">
+            Busca por nombre, apellido o DNI
+          </p>
+        </div>
+      </div>
+
+      <div className="p-5 space-y-4">
+        {/* Search input */}
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70" />
+            <Input
+              id="student-search-input"
+              placeholder="Nombre, apellido o DNI…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="pl-9 h-10 text-sm"
+            />
+          </div>
+          <Button
+            onClick={search}
+            disabled={loading || !query.trim()}
+            className="gap-2 cursor-pointer shrink-0"
+            id="btn-search-student"
+          >
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+            Buscar
+          </Button>
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+            {error}
+          </div>
+        )}
+
+        {/* Results */}
+        {searched && students.length === 0 && !loading && (
+          <p className="text-xs text-muted-foreground text-center py-6">
+            No se encontraron estudiantes con ese criterio.
+          </p>
+        )}
+
+        {students.length > 0 && (
+          <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+            {students.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => onSelect(s)}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-border hover:border-primary/40 hover:bg-primary/5 transition-all text-left group"
+                id={`student-item-${s.id}`}
+              >
+                <div className="h-9 w-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                  <User className="h-4 w-4 text-muted-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground truncate">
+                    {getStudentName(s)}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    DNI: {s.documentNumber}
+                    {s.baseClassroom?.name ? ` · ${s.baseClassroom.name}` : ""}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {s.rekognitionId ? (
+                    <Badge className="text-[10px] bg-emerald-500/15 text-emerald-700 border-emerald-200 border font-medium">
+                      <Fingerprint className="h-3 w-3 mr-1" />
+                      Registrado
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                      Sin rostro
+                    </Badge>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
