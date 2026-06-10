@@ -28,7 +28,7 @@ export function proxy(request: NextRequest) {
   const apiPrefix = getApiPrefix();
 
   // Intercept and proxy API calls to the backend to bypass CORS (server-to-server rewrite)
-  if (pathname.startsWith(apiPrefix + '/')) {
+  if (pathname.startsWith(apiPrefix + '/') && !pathname.endsWith('/attendance/justify/chat')) {
     const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
     const path = pathname.replace(apiPrefix + '/', '');
     const targetUrl = new URL(`${backendUrl}/${path}${search}`);
