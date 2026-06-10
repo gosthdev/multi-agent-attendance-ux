@@ -128,6 +128,7 @@ export function DashboardShell({ user }: DashboardShellProps) {
   }
 
   const activeModule = visibleMenuItems.find(m => m.id === activeTab) || visibleMenuItems[0];
+  const isJustificar = activeTab === "justificar";
 
   return (
     <div className="flex h-screen w-full bg-background overflow-hidden text-foreground font-sans">
@@ -263,17 +264,19 @@ export function DashboardShell({ user }: DashboardShellProps) {
         </header>
 
         {/* WORKSPACE CONTENT AREA (Light backgrounds) */}
-        <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-background">
-          <div className="max-w-6xl mx-auto space-y-6">
+        <main className={`flex-1 bg-background ${isJustificar ? "p-0 overflow-hidden" : "p-6 md:p-8 overflow-y-auto"}`}>
+          <div className={isJustificar ? "w-full h-full" : "max-w-6xl mx-auto space-y-6"}>
             {/* Header description */}
-            <div className="flex flex-col gap-1">
-              <h2 className="text-2xl font-bold tracking-tight text-foreground capitalize">
-                {activeModule.label}
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Panel de control y visualización de {activeModule.label.toLowerCase()}
-              </p>
-            </div>
+            {!isJustificar && (
+              <div className="flex flex-col gap-1">
+                <h2 className="text-2xl font-bold tracking-tight text-foreground capitalize">
+                  {activeModule.label}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Panel de control y visualización de {activeModule.label.toLowerCase()}
+                </p>
+              </div>
+            )}
 
             {/* Render actual views based on activeTab */}
             {activeTab === "aulas" ? (
