@@ -30,9 +30,17 @@ import { JustifyChatView } from "@/components/justify-chat-view";
 import { CoursesView } from "@/components/courses-view";
 import { StudentsView } from "@/components/students-view";
 import { AttendanceHistoryView } from "@/components/attendance-history-view";
+
 const AttendanceView = dynamic(
   () => import("@/components/attendance-view").then((m) => ({ default: m.AttendanceView })),
-  { ssr: false, loading: () => <div className="bg-card border border-border rounded-2xl p-8 min-h-[300px] flex items-center justify-center text-muted-foreground text-sm">Cargando módulo de asistencia…</div> }
+  {
+    ssr: false,
+    loading: () => (
+      <div className="bg-card border border-border rounded-2xl p-8 min-h-[300px] flex items-center justify-center text-muted-foreground text-sm">
+        Cargando módulo de asistencia…
+      </div>
+    ),
+  }
 );
 
 interface DashboardShellProps {
