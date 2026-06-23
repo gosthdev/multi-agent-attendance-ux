@@ -16,7 +16,9 @@ import {
   GraduationCap,
   Users,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  CalendarClock,
+  CalendarDays
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,14 +72,18 @@ export function AdministrationView({ user }: AdministrationViewProps) {
   const isAdmin = userGroups.includes("admin");
   const isTeacher = userGroups.includes("teacher");
 
-  // Determine available tabs
-  const defaultTab = isAdmin ? "teachers" : "parents";
+  // Determine available tabs — absences first for admin
+  const defaultTab = isAdmin ? "absences" : "parents";
 
   return (
     <div className="space-y-6 font-sans">
       {isAdmin ? (
         <Tabs defaultValue={defaultTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-[400px] mb-6">
+          <TabsList className="grid w-full grid-cols-3 max-w-[560px] mb-6">
+            <TabsTrigger value="absences" className="cursor-pointer gap-2">
+              <CalendarClock className="h-4 w-4" />
+              Generar Inasistencias
+            </TabsTrigger>
             <TabsTrigger value="teachers" className="cursor-pointer gap-2">
               <GraduationCap className="h-4 w-4" />
               Crear Docente
@@ -88,6 +94,10 @@ export function AdministrationView({ user }: AdministrationViewProps) {
             </TabsTrigger>
           </TabsList>
           
+          <TabsContent value="absences">
+            <GenerateAbsencesForm />
+          </TabsContent>
+
           <TabsContent value="teachers">
             <UserCreationForm type="teacher" />
           </TabsContent>
@@ -110,6 +120,162 @@ export function AdministrationView({ user }: AdministrationViewProps) {
       )}
       <Toaster position="top-right" closeButton richColors theme="light" />
     </div>
+  );
+}
+
+// ─── Generate Absences Form ──────────────────────────────────────────────────
+
+function GenerateAbsencesForm() {
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split("T")[0];
+  });
+  const [isPending, startTransition] = useTransition();
+  const [result, setResult] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+
+  const getCookie = (name: string) => {
+    if (typeof document === "undefined") return "";
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(";").shift() || "";
+    return "";
+  };
+
+  const handleGenerate = () => {
+    if (!selectedDate) {
+      setResult({ type: "error", message: "Selecciona una fecha antes de continuar." });
+      return;
+    }
+
+    setResult(null);
+
+    startTransition(async () => {
+      try {
+        const token = getCookie("id_token");
+        const apiPrefix = getApiPrefix();
+        const endpoint = `${apiPrefix}/attendance/generate-absences?date=${selectedDate}`;
+
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.status !== 201 && !response.ok) {
+          const errorText = await response.text().catch(() => "");
+          throw new Error(errorText || `HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        const generated = data.generated ?? 0;
+
+        const formattedDate = new Date(selectedDate + "T12:00:00").toLocaleDateString("es-ES", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+
+        setResult({
+          type: "success",
+          message: `Se generaron ${generated} registro(s) de inasistencia para el ${formattedDate}.`,
+        });
+
+        toast.success(`${generated} inasistencia(s) generadas correctamente.`);
+      } catch (error: any) {
+        console.error("Generate absences error:", error);
+        setResult({
+          type: "error",
+          message: error.message || "Ocurrió un error al generar las inasistencias. Intenta nuevamente.",
+        });
+        toast.error("Error al generar inasistencias.");
+      }
+    });
+  };
+
+  return (
+    <Card className="bg-white border-slate-200 shadow-sm rounded-2xl max-w-2xl">
+      <CardHeader className="border-b border-slate-100 pb-5">
+        <CardTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+          <CalendarClock className="h-5 w-5 text-primary" />
+          Generar Registro de Inasistencias
+        </CardTitle>
+        <CardDescription className="text-xs text-slate-500">
+          Genera los registros de inasistencia para todos los estudiantes que no tuvieron asistencia registrada en la fecha seleccionada.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="pt-6">
+        <div className="space-y-5">
+          {/* Date picker */}
+          <div className="space-y-1.5">
+            <Label htmlFor="absenceDate" className="text-xs font-semibold text-slate-700">
+              Fecha
+            </Label>
+            <div className="relative">
+              <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+              <Input
+                id="absenceDate"
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="pl-10 h-10 border-slate-200 text-slate-950 focus-visible:ring-primary/10 rounded-lg max-w-xs"
+                disabled={isPending}
+              />
+            </div>
+          </div>
+
+          {/* Generate button */}
+          <Button
+            type="button"
+            onClick={handleGenerate}
+            className="w-full sm:w-auto h-10 bg-primary hover:bg-primary/95 text-white font-medium shadow-sm transition-all rounded-lg flex items-center justify-center gap-2 border-0 cursor-pointer px-6"
+            disabled={isPending}
+          >
+            {isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Generando registros...
+              </>
+            ) : (
+              <>
+                <CalendarClock className="h-4 w-4" />
+                Generar Inasistencias
+              </>
+            )}
+          </Button>
+
+          {/* Result message */}
+          {result && (
+            <div
+              className={`p-4 rounded-xl border flex items-start gap-3 transition-all duration-200 animate-in fade-in slide-in-from-top-2 ${
+                result.type === "success"
+                  ? "bg-emerald-50 border-emerald-100 text-emerald-800"
+                  : "bg-red-50 border-red-100 text-red-800"
+              }`}
+            >
+              {result.type === "success" ? (
+                <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+              ) : (
+                <AlertCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+              )}
+              <div className="space-y-0.5">
+                <p className="text-sm font-bold text-slate-900">
+                  {result.type === "success" ? "Generación Exitosa" : "Error"}
+                </p>
+                <p className={`text-xs leading-normal ${result.type === "success" ? "text-emerald-700" : "text-red-700"}`}>
+                  {result.message}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
